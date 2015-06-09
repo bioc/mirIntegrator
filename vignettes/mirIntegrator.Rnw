@@ -1,0 +1,298 @@
+%\VignetteIndexEntry{mirIntegrator Overview}
+%\VignetteDepends{mirIntegrator, ROntoTools, graph}
+%\VignetteKeywords{mirIntegrator}
+%\VignettePackage{mirIntegrator}
+\documentclass[11pt]{article}
+
+\usepackage{hyperref}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+
+%\usepackage{listings}
+%\usepackage{comment}
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsc{#1}}}
+\newcommand{\Rpackagev}[1]{{\textsc{#1} package}}
+\newcommand{\Rclass}[1]{{\texttt{#1}}}
+
+
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+
+\title{\Rpackage{mirIntegrator}: Integrating miRNAs into signaling pathways}
+\author{Diana Diaz and Sorin Draghici\\
+Department of Computer Science,
+Wayne State University,
+Detroit MI 48201}
+\maketitle
+
+\begin{abstract}
+
+\Rpackage{mirIntegrator} is an R package for integrating microRNAs (miRNAs) into
+signaling pathways to perform pathway analysis using both mRNA and miRNA 
+expressions. 
+Typical pathway analysis methods help to investigate which pathways are 
+relevant to a particular phenotype understudy. 
+The input of these methods are the fold change of mRNA of two different 
+phenotypes 
+(e.g. control versus disease), and a set of signaling pathways.
+Researchers investigating miRNA cannot perform pathway analysis using traditional 
+methods because current
+pathways datasets do not contain miRNA-gene interactions.
+\Rpackagev{mirIntegrator} aims to fill this gap by:
+\begin{enumerate}
+\item Integrating miRNAs into signaling pathways, 
+\item Generating a graphical representation of the augmented pathways, and
+\item Facilitating the use of pathway analysis techniques when studying miRNA and
+mRNA expression levels. 
+\end{enumerate}
+
+\end{abstract}
+
+
+\section{Integration of miRNA into signaling pathways}
+
+The main functionality of the \Rpackagev{mirIntegrator} is the integration of
+miRNAs into signaling pathways.
+The input of this functionality are a set of signaling pathways like KEGG 
+pathways \cite{Kanehisa:2000} 
+or Reactome \cite{croft2014reactome},
+and a miRNA-target interaction database like mirTarBase
+\cite{hsu_mirtarbase_2014} 
+or TargetScan \cite{lewis:2005b}.
+The output is a set of augmented signaling pathways.
+Each augmented pathway contains the original sets of genes and interactions plus 
+the set of miRNAs involved in the pathways and their miRNA-target interactions.
+These interactions are the biological miRNA repression to their target genes and 
+are represented in the model as negative interactions. 
+
+
+Here we show an example of the method functionality. Let us say that some 
+researchers
+need to 
+integrate 
+KEGG \cite{Kanehisa:2000}
+human signaling pathways with miRNA interactions from miRTarBase
+ \cite{hsu_mirtarbase_2014}. 
+Researchers must first obtain the list of pathways as a list of 
+\Rclass{graph::graphNEL} 
+objects. The nodes of each pathway represent the genes involved in the pathway
+and the edges represent the biological interactions among those genes
+(activation or repression).
+The second step is to obtain a miRNA-target interactions dataset as 
+a \Rclass{data.frame} with the columns \Robject{"miRNA"} and 
+\Robject{"Target.ID"}. Notice that the symbols used to 
+identify the \Robject{"Target.ID"} column on the miRNA-target interactions dataset must be the same symbols 
+used on the nodes of the pathways. 
+i.e. If the genes are identified by entrezID on the pathways' dataset, then
+the miRNA-targets dataset must identify the genes by entrezID as well.
+Once the researchers have these two datasets, they can use the function 
+\Rfunction{$integrate\_mir$}. 
+
+
+To demonstrate this functionality, \Rpackagev{mirIntegrator} includes the object
+\Robject{mirTarBase} which is a copy of
+the experimentally validated miRNA-target interactions database 
+miRTarBase \cite{hsu_mirtarbase_2014}. 
+We downloaded the miRTarBase database 
+from \url{http://mirtarbase.mbc.nctu.edu.tw/}
+on April 1st, 2015. A complete script describing how this database was downloaded 
+and 
+formated is included in this package on 
+'/inst/scripts/get\_mirTarBase.R'. 
+
+
+Here an example of how researchers can generate the list of augmented pathways 
+from 
+five KEGG pathways 
+and mirTarBase interactions using the function \Rfunction{$integrate\_mir$}:
+
+<<<eval=TRUE, echo=FALSE>>=
+ set.seed(42L)
+@ 
+
+%s1
+<<eval=TRUE, echo=TRUE>>=
+ require("mirIntegrator")
+ data(kegg_pathways)
+ data(mirTarBase)
+ kegg_pathways <- kegg_pathways[18:20] #delete this for augmenting all pathways.
+ augmented_pathways <- integrate_mir(kegg_pathways, mirTarBase)
+ head(augmented_pathways)
+@
+
+
+
+The result is a list of pathways where each pathway is a \Robject{graph::graphNEL} 
+object. 
+When researchers need to see the details of a particular pathway, they can do
+so by simply using the KEGG pathway id of the pathway of interest.
+For example, the pathway "path:hsa04122" can be reach with the following 
+instruction:
+%s2
+<<eval=TRUE, echo=TRUE>>=
+ augmented_pathways$"path:hsa04122"
+@
+
+\section{Graphical output}
+
+\Rpackage{mirIntegrator} incorporates a functionality to produce a graphical 
+representation of the 
+final pathways. This is useful when researchers need to visualize the nodes that 
+were added 
+to the pathway.
+For instance, if they need 
+to see how the
+pathway of "Sulfur relay system" (path:hsa04122) has changed,
+they can plot the augmented pathway using the function 
+\Rfunction{plot\_augmented\_pathway}. Here an example, 
+Figure \ref{fig:comp} is the output of these instructions:
+
+%s3
+<<eval=TRUE, echo=TRUE>>=
+  data(names_pathways)
+plot_augmented_pathway(kegg_pathways$"path:hsa04122", 
+                       augmented_pathways$"path:hsa04122",
+                       names_pathways["path:hsa04122"] )
+@
+
+
+\begin{figure}
+\centering
+<<echo=FALSE, fig=TRUE>>=
+  plot_augmented_pathway(kegg_pathways$"path:hsa04122", 
+                         augmented_pathways$"path:hsa04122",
+                         names_pathways["path:hsa04122"] )
+@
+\caption{\label{fig:comp}Visualization of the Sulfur relay system augmented
+ pathway using the function \Rfunction{plot\_augmented\_pathway}.}
+\end{figure}
+
+
+Another useful function is \Rfunction{plot\_change} which can
+be used to see how much the order of the pathways have changed.
+To demonstrate this functionality, the \Rpackagev{mirIntegrator} includes a 
+copy of
+KEGG human signaling pathways.
+We obtained these KEGG pathways using the \Rpackagev{ROntoTools}  
+\cite{voichitaROntoTools}. A complete script describing how this dataset was obtained is included in this package on 
+'/inst/scripts/get\_kegg\_pathways.R'. 
+Here an example of the use of the function \Rfunction{plot\_change}. The result is 
+shown on Figure \ref{fig:change}:
+
+%s4
+<<eval=TRUE, echo=TRUE>>=
+  data(augmented_pathways)
+  data(kegg_pathways)
+  data(names_pathways)
+  plot_change(kegg_pathways,augmented_pathways, names_pathways)
+@
+
+\begin{figure}
+\centering
+<<echo=FALSE, fig=TRUE,  height=3, width=6>>=
+  plot_change(kegg_pathways,augmented_pathways, names_pathways)
+@
+\caption{\label{fig:change}Plotting of the change of pathways' order using the function \Rfunction{plot\_change}.}
+\end{figure}
+
+This package also includes a function to generate of a pdf file 
+with the plots of the list of augmented pathways. Here an example of this 
+functionality:
+
+%s5
+<<eval=TRUE, echo=TRUE>>=
+  data(augmented_pathways)
+  data(kegg_pathways)
+  data(names_pathways)
+  pathways2pdf(kegg_pathways[18:20],augmented_pathways[18:20],
+               names_pathways[18:20], "three_pathways.pdf")
+@
+
+
+\section{Pathway analysis of miRNA and mRNA: a case study}
+
+The main purpose of the pathways augmentation process is to analyze miRNA and mRNA 
+expressions at the 
+same time. For this reason, we show here
+how to analyze a multiple sclerosis dataset using
+the \Rpackagev{mirIntegrator}.
+The dataset that we analyzed was published by Jernas, 
+M., et. al. \cite{jernas_microrna_2013} whom collected heparin-anticoagulated 
+peripheral blood from 21 multiple 
+sclerosis (MS) patients and nine healthy controls. Ten of the 21 samples were used 
+to profiled mRNA expression, and the 11 
+remaining were used to profiled miRNA expression. These datasets are accessible 
+at 
+NCBI GEO database \cite{edgar_gene_2002} with accession GSE43592. We preprocessed 
+the datasets using the \Rpackagev{limma} 
+\cite{smyth2005limma}. 
+For demonstration purposes, we included the preprocessed datasets on this package.
+
+%s6
+<<eval=TRUE, echo=TRUE>>=
+  data(GSE43592_miRNA)
+  data(GSE43592_mRNA)
+@
+
+Once researchers have the data and the augmented pathways, they can run the pathway 
+analysis method that they prefer. We suggest to use \Rpackagev{ROntoTools} 
+\cite{voichitaROntoTools} because it takes in account the topology of the 
+pathways (the method implemented on \Rpackage{ROntoTools} is explained on 
+\cite{voichita_incorporating_2012}). 
+We 
+show here how to perform impact pathway analysis 
+\cite{voichita_incorporating_2012} using the
+\Rpackagev{ROntoTools} with our augmented pathways:
+
+%s7
+<<eval=TRUE, echo=TRUE>>=
+  require(graph)
+  require(ROntoTools)
+  data(GSE43592_mRNA)
+  data(GSE43592_miRNA)
+  data(augmented_pathways)
+  data(names_pathways)
+  lfoldChangeMRNA <- GSE43592_mRNA$logFC
+  names(lfoldChangeMRNA) <- GSE43592_mRNA$entrez
+  
+  lfoldChangeMiRNA <- GSE43592_miRNA$logFC
+  names(lfoldChangeMiRNA) <- GSE43592_miRNA$entrez
+  
+  keggGenes <- unique(unlist( lapply(augmented_pathways,nodes) ) )
+  interGMi <- intersect(keggGenes, GSE43592_miRNA$entrez)
+  interGM <- intersect(keggGenes, GSE43592_mRNA$entrez)
+  ## For real-world analysis, nboot should be >= 2000
+  peRes <- pe(x= c(lfoldChangeMRNA, lfoldChangeMiRNA ),
+              graphs=augmented_pathways, nboot = 200, verbose = FALSE)
+  message(paste("There are ", length(unique(GSE43592_miRNA$entrez)),
+                "miRNAs meassured and",length(interGMi), 
+                "of them were included in the analysis."))
+  message(paste("There are ", length(unique(GSE43592_mRNA$entrez)),
+                "mRNAs meassured and", length(interGM),
+                "of them were included in the analysis."))
+  
+  summ <- Summary(peRes)
+  rankList <- data.frame(summ,path.id = row.names(summ))
+  tableKnames <- data.frame(path.id = names(names_pathways),names_pathways)
+  rankList <- merge(tableKnames, rankList, by.x = "path.id", by.y = "path.id")
+  rankList <- rankList[with(rankList, order(pAcc.fdr)), ] 
+  head(rankList)
+@
+
+\section{Citing mirIntegrator}
+
+The algorithms and methods for integrating miRNA and mRNA included on this 
+package are in publication process. 
+\nocite{*}
+
+
+\bibliographystyle{ieeetr} 
+\bibliography{mirIntegrator}
+
+
+\end{document}

@@ -1,0 +1,19 @@
+Package: mirIntegrator
+Version: 0.99.5
+Date: 2015-05-08
+Type: Package
+Title: Integrating microRNA expression into signaling pathways for
+        pathway analysis
+Author: Diana Diaz <dmd at wayne dot edu> and Sorin Draghici <sorin at
+        wayne dot edu>
+Maintainer: Diana Diaz <dmd@wayne.edu>
+Depends: R (>= 3.2)
+Imports: graph,ROntoTools, ggplot2, org.Hs.eg.db, AnnotationDbi,
+        Rgraphviz
+Suggests: RUnit, BiocGenerics
+Description: Tools for augmenting signaling pathways to perform pathway
+        analysis of microRNA and mRNA expression levels.
+License: GPL (>=3)
+URL: http://vortex.cs.wayne.edu/
+biocViews: Network, Microarray, GraphAndNetwork, Pathways, KEGG
+NeedsCompilation: no
