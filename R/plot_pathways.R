@@ -9,8 +9,9 @@
 #' @import AnnotationDbi
 #private
 plotPathway2Colors <- function(pathway.i, subclass, name = "A pathway",  
-                               twocolors = c("lightgreen", "black"), twoshapes = c("box", "box"),
-                               twofontcolor = c("black", "white") , fontsize = 10, numberofchar = 15, showEdgeData = TRUE){
+                               twocolors = c("lightgreen", "#FEB24C"), twoshapes = c("box", "box"),
+                               twofontcolor = c("black", "black") , fontsize = 20, numberofchar = 15, showEdgeData = TRUE){
+  
   entrezOrganism = "org.Hs.eg"
   
   entrez2Sym <- org.Hs.egSYMBOL2EG
@@ -36,24 +37,38 @@ plotPathway2Colors <- function(pathway.i, subclass, name = "A pathway",
   graph::nodes(pathway.i) <- symbols
   edgeLabels <- unlist(edgeWeights(pathway.i))
   edgesFromTo <- names(edgeLabels)
-  if(showEdgeData){
-    edgeLabels <- unlist(edgeData(pathway.i))
-  }
+  
+  edgeLabels <- unlist(edgeData(pathway.i))
+  
   nodeType <- 1 + (graph::nodes(pathway.i) %in% subclass)
-  nA = Rgraphviz::makeNodeAttrs(pathway.i,fixedSize=FALSE, 
-                     height = "1", width = "1",
-                     fillcolor = twocolors[nodeType], shape = twoshapes[nodeType], 
-                     fontcolor = twofontcolor[nodeType], fontsize = fontsize )
+  nA = Rgraphviz::makeNodeAttrs(pathway.i, 
+                                height = "1", #width = "1",
+                                fillcolor = twocolors[nodeType], shape = twoshapes[nodeType], 
+                                fontcolor = twofontcolor[nodeType], fontsize = fontsize )
   eAttrs <- list()
   edgesFromTo <- gsub("\\.", "~", edgesFromTo) 
   edgesFromTo -> names(edgeLabels)
-  eAttrs$label <- edgeLabels
-  att = list(graph = list(rankdir = "LR", rank = ""))
+  if(showEdgeData){
+    eAttrs$label <- edgeLabels
+  }
+  edgeColors <- edgeLabels
+  for(i in seq_along(edgeColors)){
+    if(edgeColors[i] == "repression"){
+      edgeColors[i]<- "red"
+    } else 
+      edgeColors[i]<- "black"
+  }
+  eAttrs$color <- edgeColors
+  att = list(graph = list(rankdir = "LR", rank = ""), node = list(fixedsize = FALSE))
   plot(pathway.i, main = name, attrs = att, nodeAttrs = nA, edgeAttrs = eAttrs)
-  legend("bottomright", legend = c("original", "new"), 
-         col = twocolors,
-         pch = c(19,19), title = " ",
-         lwd = 2, 
-         cex = 0.5)
+  legend("topright", legend = c("genes", "microRNAs"), 
+         #col = twocolors,
+         pch = c(19,19),
+         cex = 0.9)
+  legend("right", legend = c("activation", "repression"), 
+         col = c("black", "red"),
+         pch = c('-','-'),
+         lwd = 3,
+         cex = 0.9)
 }
 

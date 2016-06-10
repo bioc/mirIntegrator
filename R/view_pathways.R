@@ -60,6 +60,7 @@ smallest_pathway <- function(pathways){
 #' pathway and edges represent the biological interactions (activation or
 #' repression) among them.
 #' @param pathway_name The name of the pathway.
+#' @param ... Other arguments for the '<plotPathway2Colors>' function.
 #' 
 #' @return
 #' A plot of one augmented pathway with the new nodes
@@ -78,12 +79,19 @@ smallest_pathway <- function(pathways){
 #' 
 #' @import graph
 #' @export
-plot_augmented_pathway <- function(original_pathway, augmented_pathway, pathway_name = " "){
+plot_augmented_pathway <- function(original_pathway, augmented_pathway, pathway_name = " ", ...){
+  graph::nodes(augmented_pathway) <- gsub("hsa-", "", graph::nodes(augmented_pathway)) #remove hsa- to fit graphs
+  graph::nodes(augmented_pathway) <- gsub("miR-", "", graph::nodes(augmented_pathway)) #remove hsa- to fit graphs
+  
   oldnodes = graph::nodes(original_pathway)
-  newnodes = graph::nodes(augmented_pathway) 
+  newnodes = graph::nodes(augmented_pathway)
+  
   augmentednodes = setdiff(newnodes, oldnodes)
+  
+  
+  
   plotPathway2Colors(pathway.i = augmented_pathway, subclass = augmentednodes, 
-                     name = paste(pathway_name, "augmented pathway."))
+                     name = paste(pathway_name, "augmented pathway."), ...)
 }
 
 
@@ -149,13 +157,17 @@ pathways2pdf <- function(original_pathways,
 
 #' @import ggplot2
 #private
-plotLines <- function (line1, line2, line3,lab1, lab2, lab3,xlab, ylab ){
-  #1:
+plotLines <- function (line1, line2, line3,lab1, lab2, lab3,xlab, ylab, sizeT = 20, ...){
+  
   df <- data.frame(x = rep(seq_along(line1), 3), y = c(line1, line2, line3), 
-                   colors = rep(c(lab1, lab2, lab3), each=length(line1)) )
-  plines <- ggplot2::ggplot(data = df, ggplot2::aes(x=x, y=y, col=colors)) + ggplot2::geom_line() + ggplot2::xlab(xlab)  + ggplot2::ylab(ylab)
-  plines + ggplot2::guides(fill=ggplot2::guide_legend(title=NULL))
-  plines + ggplot2::theme(legend.title=ggplot2::element_blank())
+                   pathways_set = rep(c(lab1, lab2, lab3), each=length(line1)) )
+  plines <- ggplot2::ggplot(data = df, ggplot2::aes(x=x, y=y, col=pathways_set)) + ggplot2::geom_line()
+  plines <- plines + ggplot2::xlab(xlab)  + ggplot2::ylab(ylab)
+  plines <- plines + ggplot2::theme(text = ggplot2::element_text(size=sizeT),  
+                                    legend.text = ggplot2::element_text(size=sizeT-2),
+                                    legend.title=ggplot2::element_blank(),
+                                    legend.position = "bottom")
+  plines <- plines + ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=4)))
   plines
 }
 
@@ -183,6 +195,7 @@ plotLines <- function (line1, line2, line3,lab1, lab2, lab3,xlab, ylab ){
 #' pathway and edges represent the biological interactions (activation or 
 #' repression) among them.
 #' @param pathway_names A list of names of the pathways named by '<pathway_ID>'.
+#' @param ... Other arguments for the '<plotLines>' function.
 #' 
 #' @return
 #' A lines plot of the comparison of pathways order.
@@ -199,7 +212,7 @@ plotLines <- function (line1, line2, line3,lab1, lab2, lab3,xlab, ylab ){
 #' @import ROntoTools 
 #' @import graph
 #' @export
-plot_change <- function(original_pathways,augmented_pathways,pathway_names){
+plot_change <- function(original_pathways,augmented_pathways,pathway_names, ...){
   microRNAadded <- data.frame(name = pathway_names, genesOriginal = NA, genesAugmented = NA, microRNAadded  = NA)
   for(i in seq_along(original_pathways)){ 
     pathway.i = original_pathways[[i]]
@@ -210,9 +223,12 @@ plot_change <- function(original_pathways,augmented_pathways,pathway_names){
     microRNAadded[i,2:4] = c(genesOriginal,genesAugmentes, microRNAaddedn)
   }
   microRNAadded <- microRNAadded[with(microRNAadded, order(genesOriginal)),]
+  microRNAadded <- microRNAadded[complete.cases(microRNAadded),]
+  
+  
   
   plines <- plotLines(line1 = microRNAadded$genesOriginal,   line2 = microRNAadded$genesAugmented,
-                      line3 = microRNAadded$microRNAadded,lab1 = "Original", lab2 = "Augmented",
-                      lab3 = "Difference",   xlab = "Pathways",  ylab = "Number of genes")
+                      line3 = microRNAadded$microRNAadded, lab1 = " Original pathways     \n (only genes)     ", lab2 = "Augmented pathways     \n(genes and microRNAs)     ",
+                      lab3 = "Difference between pathways     \n(only microRNAs)",   xlab = "Pathway index",  ylab = "Number of molecules", ...)
   plines
 }

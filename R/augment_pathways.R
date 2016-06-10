@@ -48,7 +48,7 @@ generatePathway.i <- function(pathway.i, targets)
   mir.i <- mirTarget(ent.gen.i, targets)
   for(i in seq_along(mir.i)){  
     pathway.i <- addMirEffect(mir.i= mir.i[i], 
-                                 ent.gen.i, pathway.i, targets)
+                              ent.gen.i, pathway.i, targets)
   }
   pathway.i
 }
@@ -105,8 +105,8 @@ integrate_mir <- function(original_pathways, targets_db)
 {
   isGraphNEL <- function(x) is(x, "graphNEL")
   if( ("miRNA" %in% names(targets_db)) && ("Target.ID" %in% names(targets_db))
-     && is.data.frame(targets_db) 
-     && all(vapply(original_pathways, isGraphNEL, logical(1), USE.NAMES=FALSE))  )
+      && is.data.frame(targets_db) 
+      && all(vapply(original_pathways, isGraphNEL, logical(1), USE.NAMES=FALSE))  )
   {
     targets_db <- targets_db[,c("miRNA","Target.ID")]
     genPath <- function(X){

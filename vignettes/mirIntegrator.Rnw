@@ -195,7 +195,7 @@ shown on Figure \ref{fig:change}:
 \begin{figure}
 \centering
 <<echo=FALSE, fig=TRUE,  height=3, width=6>>=
-  plot_change(kegg_pathways,augmented_pathways, names_pathways)
+  plot_change(kegg_pathways,augmented_pathways, names_pathways, sizeT = 10)
 @
 \caption{\label{fig:change}Plotting of the change of pathways' order using the function \Rfunction{plot\_change}.}
 \end{figure}
