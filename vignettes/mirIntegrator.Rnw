@@ -28,6 +28,7 @@
 Department of Computer Science,
 Wayne State University,
 Detroit MI 48201}
+\date{June 9, 2015}
 \maketitle
 
 \begin{abstract}
